@@ -1,16 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Your existing head content remains the same -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canvas Credit Union Assistant</title>
-    <!-- Your CSS styles remain the same -->
-    <!-- ... -->
+    <style>
+        :root {
+            --primary: #1a76d2;
+            --primary-dark: #0d47a1;
+            --light-gray: #f5f5f5;
+            --mid-gray: #e0e0e0;
+            --dark-gray: #757575;
+            --text: #212121;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #fff;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        header {
+            padding: 20px 0;
+            background-color: #fff;
+            border-bottom: 1px solid var(--mid-gray);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 20px;
+        }
+        
+        .account-summary {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .account-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .account-card h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .account-card .balance {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .account-card .details {
+            color: var(--dark-gray);
+            font-size: 14px;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+            border-radius: 8px;
+            border: 1px solid var(--mid-gray);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        
+        .user-message {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            background-color: var(--light-gray);
+            color: var(--text);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid var(--mid-gray);
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--mid-gray);
+            border-radius: 30px;
+            outline: none;
+            font-size: 15px;
+        }
+        
+        .chat-input button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        
+        .chat-input button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .suggestion-chip {
+            background-color: var(--light-gray);
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .suggestion-chip:hover {
+            background-color: var(--mid-gray);
+        }
+        
+        .typing-indicator {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: var(--light-gray);
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            float: left;
+            margin: 0 1px;
+            background-color: var(--dark-gray);
+            display: block;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        
+        .typing-indicator span:nth-of-type(1) {
+            animation: 1s blink infinite 0.3333s;
+        }
+        
+        .typing-indicator span:nth-of-type(2) {
+            animation: 1s blink infinite 0.6666s;
+        }
+        
+        .typing-indicator span:nth-of-type(3) {
+            animation: 1s blink infinite 0.9999s;
+        }
+        
+        @keyframes blink {
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .account-card {
+                min-width: 100%;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header and account summary remain the same -->
+        <header>
+            <div class="logo">Canvas Credit Union</div>
+        </header>
+        
+        <div class="account-summary">
+            <div class="account-card">
+                <h3>Checking Account</h3>
+                <div class="balance">$2,345.82</div>
+                <div class="details">Last transaction: 05/06/2025</div>
+            </div>
+            
+            <div class="account-card">
+                <h3>Savings Account</h3>
+                <div class="balance">$5,120.50</div>
+                <div class="details">Interest earned this month: $2.15</div>
+            </div>
+            
+            <div class="account-card">
+                <h3>Auto Loan</h3>
+                <div class="balance">$12,489.65</div>
+                <div class="details">Next payment: 05/15/2025</div>
+            </div>
+        </div>
         
         <div class="chat-container">
             <div class="chat-header">
@@ -30,7 +279,7 @@
             </div>
             
             <div class="chat-input">
-                <input type="text" id="user-input" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                <input type="text" id="user-input" placeholder="Type your message here...">
                 <button id="send-button">Send</button>
             </div>
         </div>
@@ -95,10 +344,35 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
         
-        // Function to handle user messages
+        // Initialize event listeners when DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM fully loaded");
+            
+            // Add event listener for send button
+            const sendButton = document.getElementById('send-button');
+            sendButton.addEventListener('click', function() {
+                console.log("Send button clicked");
+                sendUserMessage();
+            });
+            
+            // Add event listener for enter key in input field
+            const userInput = document.getElementById('user-input');
+            userInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    console.log("Enter key pressed");
+                    sendUserMessage();
+                }
+            });
+            
+            console.log("Event listeners initialized");
+        });
+        
+        // Function to handle user message submission
         function sendUserMessage() {
             const userInput = document.getElementById('user-input');
             const message = userInput.value.trim();
+            
+            console.log("Attempting to send message:", message);
             
             if (message !== '') {
                 sendMessage(message);
@@ -106,15 +380,10 @@
             }
         }
         
-        // Function to handle Enter key
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendUserMessage();
-            }
-        }
-        
         // Function to send a message and get a response
-        async function sendMessage(message) {
+        function sendMessage(message) {
+            console.log("Processing message:", message);
+            
             // Display user message
             const chatMessages = document.getElementById('chat-messages');
             
@@ -139,22 +408,20 @@
                 content: message
             });
             
-            try {
-                // For development purposes, use the fallback response while API is not set up
-                // In production, uncomment the API call and comment out the fallback
-                let response;
-                
-                // Simulate API delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Use fallback for development
-                response = getFallbackResponse(message);
-                
-                /* 
-                // Uncomment for actual API implementation
+            // For demonstration purposes, simulate API call delay
+            setTimeout(function() {
                 try {
-                    console.log("Attempting to call API...");
-                    response = await callOpenAI(message);
+                    // For now, use the fallback response for development
+                    let response = getFallbackResponse(message);
+                    
+                    // Remove typing indicator
+                    chatMessages.removeChild(typingIndicator);
+                    
+                    // Display bot response
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'message bot-message';
+                    botMessageDiv.innerHTML = response;
+                    chatMessages.appendChild(botMessageDiv);
                     
                     // Add to conversation history
                     messageHistory.push({
@@ -166,49 +433,35 @@
                     if (messageHistory.length > 10) {
                         messageHistory = messageHistory.slice(messageHistory.length - 10);
                     }
+                    
+                    // Scroll to bottom after adding bot message
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 } catch (error) {
-                    console.error("API error:", error);
-                    response = getFallbackResponse(message);
+                    console.error('Error in sendMessage:', error);
+                    
+                    // Remove typing indicator if it still exists
+                    if (typingIndicator.parentNode) {
+                        chatMessages.removeChild(typingIndicator);
+                    }
+                    
+                    // Display error message
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'message bot-message';
+                    botMessageDiv.innerHTML = "I'm sorry, I encountered an error. Please try again later.";
+                    chatMessages.appendChild(botMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
-                */
-                
-                // Remove typing indicator
-                if (typingIndicator.parentNode) {
-                    chatMessages.removeChild(typingIndicator);
-                }
-                
-                // Display bot response
-                const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'message bot-message';
-                botMessageDiv.innerHTML = response;
-                chatMessages.appendChild(botMessageDiv);
-                
-                // Scroll to bottom after adding bot message
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            } catch (error) {
-                console.error('Error in sendMessage:', error);
-                
-                // Remove typing indicator if it still exists
-                if (typingIndicator.parentNode) {
-                    chatMessages.removeChild(typingIndicator);
-                }
-                
-                // Use fallback as a last resort
-                const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'message bot-message';
-                botMessageDiv.innerHTML = "I'm sorry, I encountered an error. Please try again later.";
-                chatMessages.appendChild(botMessageDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
+            }, 1000); // Simulate 1-second delay for bot typing
         }
         
-        // Function to call OpenAI API through our backend
+        // Function to call OpenAI API through our backend - uncomment when ready to use the real API
+        /* 
         async function callOpenAI(userMessage) {
             try {
                 console.log("Making API call through our backend...");
                 
                 // Replace with your Vercel backend URL
-                const BACKEND_URL = 'https://canvas-credit-union-backend.vercel.app/;
+                const BACKEND_URL = 'https://your-backend-url.vercel.app/api/chat';
                 
                 // Simplified system message for training purposes
                 const systemMessage = `You are a helpful financial assistant for Canvas Credit Union. 
@@ -258,7 +511,7 @@
                     throw new Error(data.error.message || "Error calling API");
                 }
                 
-                // Handle the new OpenAI API response format
+                // Handle the OpenAI API response format
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
                     return data.choices[0].message.content;
                 } else {
@@ -270,6 +523,7 @@
                 throw error;
             }
         }
+        */
         
         // Function to get a fallback response if API fails
         function getFallbackResponse(message) {
@@ -343,18 +597,6 @@
                     </div>`;
             }
         }
-        
-        // Event listeners - This is a key fix
-        document.addEventListener('DOMContentLoaded', function() {
-            // Attach event listener to button using getElementById
-            const sendButton = document.getElementById('send-button');
-            if (sendButton) {
-                sendButton.addEventListener('click', sendUserMessage);
-                console.log("Send button listener attached");
-            } else {
-                console.error("Send button not found in DOM");
-            }
-        });
     </script>
 </body>
 </html>
