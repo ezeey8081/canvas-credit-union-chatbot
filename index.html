@@ -1,251 +1,932 @@
-// Add this line after your userData declaration (around line 332 in your code)
-let conversationHistory = [];
-
-// Replace your current generateResponse function with this one (starts around line 453)
-// This completely replaces your existing generateResponse function
-async function generateResponse(userMessage) {
-    // Show typing indicator
-    showTypingIndicator();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Credit Union Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0072bb;
+            --primary-dark: #005a94;
+            --secondary: #ff6b00;
+            --secondary-light: #ff8533;
+            --light-bg: #f5f8fa;
+            --text: #333333;
+            --text-light: #666666;
+            --white: #ffffff;
+            --border: #dddddd;
+            --success: #28a745;
+            --info: #17a2b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--white);
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+        
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-light);
+        }
+        
+        .account-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        main {
+            display: flex;
+            height: calc(100vh - 130px);
+            position: relative;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background-color: var(--white);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .accounts-list {
+            list-style: none;
+        }
+        
+        .account-item {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: var(--light-bg);
+        }
+        
+        .account-item:hover {
+            background-color: #e9f2f8;
+        }
+        
+        .account-item-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .account-item-balance {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .account-item-details {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--white);
+            position: relative;
+        }
+        
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            background-color: var(--white);
+        }
+        
+        .assistant-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .assistant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .assistant-avatar i {
+            color: var(--white);
+            font-size: 1.25rem;
+        }
+        
+        .assistant-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .assistant-status {
+            font-size: 0.85rem;
+            color: var(--success);
+        }
+        
+        .chat-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .welcome-container {
+            text-align: center;
+            margin: auto;
+            max-width: 500px;
+            padding: 2rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .welcome-text {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .suggestion-chip {
+            background-color: var(--light-bg);
+            border-radius: 18px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+        }
+        
+        .suggestion-chip:hover {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+        
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 80%;
+        }
+        
+        .message.user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bot-avatar {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        .user-avatar {
+            background-color: var(--secondary);
+            color: var(--white);
+        }
+        
+        .message-content {
+            background-color: var(--light-bg);
+            padding: 1rem;
+            border-radius: 18px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .user-message .message-content {
+            background-color: var(--primary);
+            color: var(--white);
+            border-top-right-radius: 5px;
+        }
+        
+        .bot-message .message-content {
+            background-color: var(--light-bg);
+            border-top-left-radius: 5px;
+        }
+        
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        .user-message .message-time {
+            text-align: right;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .input-container {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background-color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            outline: none;
+            font-size: 1rem;
+            background-color: var(--light-bg);
+            transition: border-color 0.2s ease;
+        }
+        
+        .message-input:focus {
+            border-color: var(--primary);
+        }
+        
+        .send-button {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .send-button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .send-button i {
+            font-size: 1.25rem;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--light-bg);
+            border-radius: 18px;
+            width: fit-content;
+            margin-bottom: 10px;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            animation: typing-animation 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing-animation {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: -280px;
+                height: 100%;
+                z-index: 10;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                margin-right: 10px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .app-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <button id="sidebar-toggle" class="mobile-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <img src="https://www.canvas.org/assets/img/logo.png" alt="Canvas Credit Union Logo" class="logo" onerror="this.src='https://via.placeholder.com/120x40?text=Canvas+CU';this.onerror='';">
+            <span class="app-title">Financial Assistant</span>
+        </div>
+        <div class="account-info">
+            <span id="user-name">Alex Thompson</span>
+            <div class="account-avatar">A</div>
+        </div>
+    </header>
     
-    try {
-        // Backend URL - your Vercel deployment
-        const backendUrl = 'https://canvas-credit-union-backend.vercel.app/api/chat';
+    <main>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span>Your Accounts</span>
+                <i class="fas fa-sync-alt" style="cursor: pointer;" title="Refresh accounts"></i>
+            </div>
+            <ul class="accounts-list">
+                <li class="account-item" data-account="checking">
+                    <div class="account-item-title">
+                        <span>Checking</span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="account-item-balance">$2,450.65</div>
+                    <div class="account-item-details">
+                        Last transaction: May 7, 2025
+                    </div>
+                </li>
+                <li class="account-item" data-account="savings">
+                    <div class="account-item-title">
+                        <span>Savings</span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="account-item-balance">$8,750.42</div>
+                    <div class="account-item-details">
+                        APY: 2.25%
+                    </div>
+                </li>
+                <li class="account-item" data-account="autoLoan">
+                    <div class="account-item-title">
+                        <span>Auto Loan</span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="account-item-balance">$12,368.30</div>
+                    <div class="account-item-details">
+                        Next payment: May 15, 2025
+                    </div>
+                </li>
+            </ul>
+            
+            <div class="sidebar-header" style="margin-top: 2rem;">
+                <span>Quick Links</span>
+            </div>
+            <ul class="accounts-list">
+                <li class="account-item" data-topic="creditScore">
+                    <div class="account-item-title">
+                        <span>Credit Score</span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="account-item-details">
+                        Current score: 730
+                    </div>
+                </li>
+                <li class="account-item" data-topic="savings">
+                    <div class="account-item-title">
+                        <span>Savings Tips</span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+                    </div>
+                </li>
+                <li class="account-item" data-topic="refinance">
+                    <div class="account-item-title">
+                        <span>Refinance Options</span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+                    </div>
+                </li>
+            </ul>
+        </aside>
         
-        console.log('Sending request to backend...');
-        
-        // Prepare the system message with financial expertise
-        const systemMessage = {
-            role: "system",
-            content: `You are an AI assistant for Canvas Credit Union. You help customers with their banking needs and financial questions. You need to respond to all financial questions with detailed, specific answers that demonstrate financial expertise.
-
-Here is customer information you have access to:
-${JSON.stringify(userData, null, 2)}
-
-FINANCIAL EXPERTISE GUIDELINES:
-1. Always provide specific financial advice with numbers and percentages when relevant
-2. Use financial industry terminology appropriately (APR, APY, amortization, etc.)
-3. Cite specific financial regulations or best practices when applicable
-4. Offer concrete examples with dollar amounts when explaining financial concepts
-5. Suggest personalized financial strategies based on the customer's accounts and transactions
-6. Include specific timeframes and deadlines for financial actions when relevant
-7. Reference current financial market conditions when appropriate
-
-RESPONSE RULES:
-- Always address the customer by name (Alex) at least once in your response
-- Format your responses with HTML when it improves readability (like <br> for line breaks or <strong> for emphasis)
-- For any questions about account balances, provide the exact amount from the userData
-- For credit score questions, explain the 12-point decrease from 742 to 730
-- For savings advice, suggest concrete actions based on their spending patterns
-- For loan questions, provide information about their auto loan and available options
-
-FINANCIAL TOPICS YOU SHOULD BE ABLE TO DISCUSS IN DETAIL:
-- Budgeting strategies and cash flow management
-- Debt consolidation and management
-- Credit score improvement tactics
-- Retirement planning (401k, IRA, etc.)
-- Emergency fund recommendations
-- Auto loan refinancing options
-- Mortgage pre-qualification and home buying process
-- Investment basics (CDs, money market accounts, etc.)
-- Tax implications of financial decisions
-- Insurance needs and considerations
-- College savings options (529 plans, etc.)
-- Financial goal setting and monitoring
-
-Do not include any suggestion chips in your response - those will be added separately.`
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="assistant-info">
+                    <div class="assistant-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="assistant-name">Canvas Financial Assistant</div>
+                        <div class="assistant-status">Online</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-content" id="chat-content">
+                <div class="welcome-container">
+                    <div class="welcome-title">Welcome to Canvas Credit Union!</div>
+                    <div class="welcome-text">
+                        I'm your personal financial assistant, here to help with your banking needs and financial questions. Ask me about your accounts, savings strategies, loan options, or anything else related to your finances.
+                    </div>
+                    <div class="suggestions">
+                        <div class="suggestion-chip" data-query="What's my checking balance?">What's my checking balance?</div>
+                        <div class="suggestion-chip" data-query="Help me save more money">Help me save more money</div>
+                        <div class="suggestion-chip" data-query="Tell me about my credit score">Tell me about my credit score</div>
+                        <div class="suggestion-chip" data-query="Auto loan refinance options">Auto loan refinance options</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" class="message-input" id="message-input" placeholder="Type your message here..." autofocus>
+                <button class="send-button" id="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Global variables
+        const userData = {
+            name: "Alex",
+            email: "alex.thompson@example.com",
+            lastLogin: "May 8, 2025, 3:42 PM",
+            accounts: {
+                checking: {
+                    balance: 2450.65,
+                    accountNumber: "****4789",
+                    lastTransaction: "May 7, 2025",
+                    transactions: [
+                        { date: "May 7, 2025", description: "GROCERY OUTLET", amount: 78.92 },
+                        { date: "May 5, 2025", description: "SHELL OIL", amount: 42.50 },
+                        { date: "May 3, 2025", description: "SPOTIFY", amount: 14.99 },
+                        { date: "May 2, 2025", description: "AMAZON", amount: 125.37 },
+                        { date: "May 1, 2025", description: "SALARY DEPOSIT", amount: 3245.18 }
+                    ]
+                },
+                savings: {
+                    balance: 8750.42,
+                    accountNumber: "****5621",
+                    interestRate: 2.25,
+                    interestEarned: 16.34
+                },
+                autoLoan: {
+                    balance: 12368.30,
+                    accountNumber: "****7832",
+                    rate: 4.75,
+                    paymentAmount: 375,
+                    nextPaymentDate: "May 15, 2025",
+                    remainingPayments: 36
+                }
+            },
+            creditScore: {
+                current: 730,
+                previous: 742,
+                factors: [
+                    "Recent credit card application",
+                    "Increased credit utilization ratio"
+                ]
+            }
         };
         
-        // Add the current user message to conversation history
-        conversationHistory.push({
-            role: "user",
-            content: userMessage
-        });
+        // Initialize conversation history
+        let conversationHistory = [];
         
-        // Create the messages array with system message and conversation history
-        // Only include the most recent 5 exchanges (10 messages) to stay within token limits
-        const messages = [
-            systemMessage,
-            ...conversationHistory.slice(-10)
-        ];
+        // DOM elements
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const chatContent = document.getElementById('chat-content');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const userName = document.getElementById('user-name');
+        const accountItems = document.querySelectorAll('.account-item');
+        const suggestionChips = document.querySelectorAll('.suggestion-chip');
         
-        // Send the request to your backend
-        const response = await fetch(backendUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                messages: messages,
-                temperature: 0.7,
-            })
-        });
+        // Set user name
+        userName.textContent = userData.name;
         
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`API responded with status ${response.status}`);
+        // Update account information
+        function updateAccountInfo() {
+            // Update checking account
+            document.querySelector('[data-account="checking"] .account-item-balance').textContent = 
+                `$${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.querySelector('[data-account="checking"] .account-item-details').textContent = 
+                `Last transaction: ${userData.accounts.checking.lastTransaction}`;
+            
+            // Update savings account
+            document.querySelector('[data-account="savings"] .account-item-balance').textContent = 
+                `$${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.querySelector('[data-account="savings"] .account-item-details').textContent = 
+                `APY: ${userData.accounts.savings.interestRate}%`;
+            
+            // Update auto loan
+            document.querySelector('[data-account="autoLoan"] .account-item-balance').textContent = 
+                `$${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.querySelector('[data-account="autoLoan"] .account-item-details').textContent = 
+                `Next payment: ${userData.accounts.autoLoan.nextPaymentDate}`;
+            
+            // Update credit score
+            document.querySelector('[data-topic="creditScore"] .account-item-details').textContent = 
+                `Current score: ${userData.creditScore.current}`;
         }
         
-        const data = await response.json();
-        console.log('Received API response');
+        // Initialize account information
+        updateAccountInfo();
         
-        // Remove typing indicator
-        removeTypingIndicator();
-        
-        // Extract the assistant's message from the response
-        let assistantMessage = "";
-        
-        if (data && data.choices && data.choices.length > 0) {
-            if (data.choices[0].message && data.choices[0].message.content) {
-                assistantMessage = data.choices[0].message.content;
-            } else if (data.choices[0].content) {
-                assistantMessage = data.choices[0].content;
-            } else {
-                throw new Error('Unexpected response format from API');
+        // Event listeners
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
-            
-            // Add the assistant's response to conversation history
-            conversationHistory.push({
-                role: "assistant",
-                content: assistantMessage
+        });
+        
+        sendButton.addEventListener('click', sendMessage);
+        
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+        });
+        
+        // Add click event for account items
+        accountItems.forEach(item => {
+            item.addEventListener('click', function() {
+                let query = '';
+                
+                if (this.dataset.account) {
+                    query = `Tell me about my ${this.dataset.account} account`;
+                } else if (this.dataset.topic) {
+                    query = `Tell me about my ${this.dataset.topic}`;
+                }
+                
+                if (query) {
+                    messageInput.value = query;
+                    sendMessage();
+                }
+                
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                }
             });
+        });
+        
+        // Add click event for suggestion chips
+        suggestionChips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                messageInput.value = this.dataset.query;
+                sendMessage();
+            });
+        });
+        
+        // Function to send a message
+        function sendMessage() {
+            const userMessage = messageInput.value.trim();
             
-            // Trim history if it gets too long
-            if (conversationHistory.length > 20) {
-                conversationHistory = conversationHistory.slice(-20);
+            if (userMessage.length === 0) {
+                return;
             }
             
-            // Add the response to the chat
-            addBotMessage(assistantMessage);
-        } else {
-            throw new Error('No response from API');
+            // Clear input
+            messageInput.value = '';
+            
+            // Add user message to the chat
+            addUserMessage(userMessage);
+            
+            // Clear welcome container if it exists
+            const welcomeContainer = document.querySelector('.welcome-container');
+            if (welcomeContainer) {
+                welcomeContainer.remove();
+            }
+            
+            // Generate response
+            generateResponse(userMessage);
         }
-    } catch (error) {
-        console.error('Error getting response:', error);
         
-        // Remove typing indicator
-        removeTypingIndicator();
+        // Function to add a user message to the chat
+        function addUserMessage(message) {
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message user-message';
+            messageElement.innerHTML = `
+                <div class="message-avatar user-avatar">${userData.name.charAt(0)}</div>
+                <div>
+                    <div class="message-content">${message}</div>
+                    <div class="message-time">${currentTime}</div>
+                </div>
+            `;
+            
+            chatContent.appendChild(messageElement);
+            scrollToBottom();
+        }
         
-        // Fall back to the original response generator
-        fallbackGenerateResponse(userMessage);
-    }
-}
+        // Function to add a bot message to the chat
+        function addBotMessage(message) {
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message bot-message';
+            messageElement.innerHTML = `
+                <div class="message-avatar bot-avatar"><i class="fas fa-robot"></i></div>
+                <div>
+                    <div class="message-content">${message}</div>
+                    <div class="message-time">${currentTime}</div>
+                </div>
+            `;
+            
+            chatContent.appendChild(messageElement);
+            scrollToBottom();
+        }
+        
+        // Function to show typing indicator
+        function showTypingIndicator() {
+            const indicatorElement = document.createElement('div');
+            indicatorElement.className = 'message bot-message typing-indicator';
+            indicatorElement.id = 'typing-indicator';
+            indicatorElement.innerHTML = `
+                <div class="message-avatar bot-avatar"><i class="fas fa-robot"></i></div>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            
+            chatContent.appendChild(indicatorElement);
+            scrollToBottom();
+        }
+        
+        // Function to remove typing indicator
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+        
+        // Function to scroll chat to bottom
+        function scrollToBottom() {
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+        
+        // Replace your current generateResponse function with this one (starts around line 453)
+        // This completely replaces your existing generateResponse function
+        async function generateResponse(userMessage) {
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                // Backend URL - your Vercel deployment
+                const backendUrl = 'https://canvas-credit-union-backend.vercel.app/api/chat';
+                
+                console.log('Sending request to backend...');
+                
+                // Prepare the system message with financial expertise
+                const systemMessage = {
+                    role: "system",
+                    content: `You are an AI assistant for Canvas Credit Union. You help customers with their banking needs and financial questions. You need to respond to all financial questions with detailed, specific answers that demonstrate financial expertise.
 
-// Add this function at the end of your script
-// This is your current generateResponse function renamed to be used as fallback
-function fallbackGenerateResponse(userMessage) {
-    // Show typing indicator again
-    showTypingIndicator();
-    
-    // Convert to lowercase for easier matching
-    const lowerMessage = userMessage.toLowerCase();
-    
-    // Simulate delay for more natural feel
-    setTimeout(() => {
-        // Remove typing indicator
-        removeTypingIndicator();
-        
-        // Generate response based on message content
-        let response = '';
-        
-        if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage === 'hey') {
-            response = `Hello ${userData.name}! How can I assist you with your accounts today?`;
-        }
-        else if (lowerMessage.includes('balance') || lowerMessage.includes('check') || lowerMessage.includes('account')) {
-            if (lowerMessage.includes('checking')) {
-                response = `Your checking account balance is <strong>$${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
-                    Your last transaction was on ${userData.accounts.checking.lastTransaction}.<br><br>
-                    Recent transactions:<br>
-                    - ${userData.accounts.checking.transactions[0].date}: ${userData.accounts.checking.transactions[0].description} ($${userData.accounts.checking.transactions[0].amount})<br>
-                    - ${userData.accounts.checking.transactions[1].date}: ${userData.accounts.checking.transactions[1].description} ($${userData.accounts.checking.transactions[1].amount})`;
-            }
-            else if (lowerMessage.includes('savings')) {
-                response = `Your savings account balance is <strong>$${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
-                    Your account earns ${userData.accounts.savings.interestRate}% APY.<br>
-                    Interest earned this month: $${userData.accounts.savings.interestEarned}`;
-            }
-            else if (lowerMessage.includes('loan') || lowerMessage.includes('auto')) {
-                response = `Your auto loan balance is <strong>$${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
-                    Your current rate is ${userData.accounts.autoLoan.rate}%.<br>
-                    Next payment of $${userData.accounts.autoLoan.paymentAmount} is due on ${userData.accounts.autoLoan.nextPaymentDate}.<br>
-                    You have ${userData.accounts.autoLoan.remainingPayments} payments remaining.`;
-            }
-            else {
-                response = `Here's a summary of your accounts:<br><br>
-                    <strong>Checking:</strong> $${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
-                    <strong>Savings:</strong> $${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
-                    <strong>Auto Loan:</strong> $${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            }
-        }
-        else if (lowerMessage.includes('credit score') || (lowerMessage.includes('credit') && lowerMessage.includes('score'))) {
-            response = `Your current credit score is <strong>${userData.creditScore.current}</strong>, which decreased from ${userData.creditScore.previous} last month.<br><br>
-                This change appears to be due to:<br>
-                - ${userData.creditScore.factors[0]}<br>
-                - ${userData.creditScore.factors[1]}<br><br>
-                To improve your score, consider paying down your credit card balances and avoiding new credit applications in the next few months.`;
-        }
-        else if (lowerMessage.includes('save') || lowerMessage.includes('saving')) {
-            if (lowerMessage.includes('round-up')) {
-                response = `Round-Up Savings automatically rounds up your debit card purchases to the nearest dollar and transfers the difference to your savings account.<br><br>
-                    For example, if you spend $3.50 on coffee, we'll round up to $4.00 and transfer $0.50 to savings. Based on your spending habits, this could help you save an additional $45-60 per month without changing your routine.`;
-            }
-            else if (lowerMessage.includes('weekly') || lowerMessage.includes('automatic') || lowerMessage.includes('transfer')) {
-                response = `Automatic transfers are a great way to build savings consistently.<br><br>
-                    Based on your income and expenses, I recommend setting up a weekly transfer of $40 from checking to savings every Friday, after your paycheck is deposited but before weekend spending typically occurs.<br><br>
-                    Would you like me to help you set up these automatic transfers?`;
-            }
-            else if (lowerMessage.includes('goal')) {
-                response = `Setting up savings goals helps you stay motivated and track progress.<br><br>
-                    Based on your current savings rate, you could reach a $10,000 emergency fund goal in about 12 months with regular $400 monthly contributions.<br><br>
-                    Our mobile app lets you create visual savings goals with target dates, automatic contributions, and progress tracking.`;
-            }
-            else {
-                response = `Looking at your spending patterns, I've identified some opportunities to help you save consistently:<br><br>
-                    1. <strong>Automatic Micro-Saving:</strong> Round-Up Savings would save about $45-60/month by rounding up purchases.<br><br>
-                    2. <strong>Smart Scheduled Saving:</strong> Automatic weekly transfers of $40 after your paycheck deposits but before weekend spending.<br><br>
-                    3. <strong>Reduce Recurring Expenses:</strong> I noticed several subscription services totaling $37.98/month that could be consolidated.`;
-            }
-        }
-        else if (lowerMessage.includes('loan') || lowerMessage.includes('auto')) {
-            if (lowerMessage.includes('extra') || lowerMessage.includes('payment')) {
-                response = `Making extra payments on your auto loan can save you money on interest and help you pay off your loan sooner.<br><br>
-                    If you make an additional payment of $100 each month toward your auto loan:<br>
-                    - You'll pay off your loan about 4 months earlier<br>
-                    - You'll save approximately $304 in interest<br><br>
-                    Extra payments are applied directly to the principal, reducing the amount of interest you pay over the life of the loan.`;
-            }
-            else if (lowerMessage.includes('refinance')) {
-                response = `Based on your current credit score of ${userData.creditScore.current} and market conditions, you might qualify for refinancing your auto loan at a lower rate.<br><br>
-                    Your current rate is ${userData.accounts.autoLoan.rate}%. If you refinance to a rate of 4.25% while keeping the same term:<br>
-                    - Your monthly payment would decrease by about $25<br>
-                    - You'd save approximately $450 in total interest<br><br>
-                    Would you like me to connect you with a loan officer to discuss refinancing options?`;
-            }
-            else if (lowerMessage.includes('payoff')) {
-                response = `With your current payment schedule of $${userData.accounts.autoLoan.paymentAmount} per month, your auto loan will be fully paid off after ${userData.accounts.autoLoan.remainingPayments} more payments.<br><br>
-                    Your projected payoff date is August 2026.<br><br>
-                    If you increased your monthly payment to $475 (an extra $100), you could pay off your loan by April 2026 and save approximately $304 in interest.`;
-            }
-            else {
-                response = `Your auto loan details:<br><br>
-                    - Current balance: $${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
-                    - Interest rate: ${userData.accounts.autoLoan.rate}%<br>
-                    - Monthly payment: $${userData.accounts.autoLoan.paymentAmount}<br>
-                    - Next payment due: ${userData.accounts.autoLoan.nextPaymentDate}<br>
-                    - Remaining payments: ${userData.accounts.autoLoan.remainingPayments}<br><br>
-                    Would you like to discuss options for paying off your loan sooner or refinancing at a potentially lower rate?`;
-            }
-        }
-        else {
-            response = `I'm here to help with your financial questions and banking needs. Here are some things I can assist with:<br><br>
-                - Account balances and recent transactions<br>
-                - Information about your credit score<br>
-                - Savings strategies tailored to your spending habits<br>
-                - Details and options for your auto loan<br><br>
-                What would you like help with today?`;
-        }
-        
-        // Add the response to the chat
-        addBotMessage(response);
-    }, 1500); // 1.5 second delay
-}
+        Here is customer information you have access to:
+        ${JSON.stringify(userData, null, 2)}
+
+        FINANCIAL EXPERTISE GUIDELINES:
+        1. Always provide specific financial advice with numbers and percentages when relevant
+        2. Use financial industry terminology appropriately (APR, APY, amortization, etc.)
+        3. Cite specific financial regulations or best practices when applicable
+        4. Offer concrete examples with dollar amounts when explaining financial concepts
+        5. Suggest personalized financial strategies based on the customer's accounts and transactions
+        6. Include specific timeframes and deadlines for financial actions when relevant
+        7. Reference current financial market conditions when appropriate
+
+        RESPONSE RULES:
+        - Always address the customer by name (Alex) at least once in your response
+        - Format your responses with HTML when it improves readability (like <br> for line breaks or <strong> for emphasis)
+        - For any questions about account balances, provide the exact amount from the userData
+        - For credit score questions, explain the 12-point decrease from 742 to 730
+        - For savings advice, suggest concrete actions based on their spending patterns
+        - For loan questions, provide information about their auto loan and available options
+
+        FINANCIAL TOPICS YOU SHOULD BE ABLE TO DISCUSS IN DETAIL:
+        - Budgeting strategies and cash flow management
+        - Debt consolidation and management
+        - Credit score improvement tactics
+        - Retirement planning (401k, IRA, etc.)
+        - Emergency fund recommendations
+        - Auto loan refinancing options
+        - Mortgage pre-qualification and home buying process
+        - Investment basics (CDs, money market accounts, etc.)
+        - Tax implications of financial decisions
+        - Insurance needs and considerations
+        - College savings options (529 plans, etc.)
+        - Financial goal setting and monitoring
+
+        Do not include any suggestion chips in your response - those will be added separately.`
+                };
+                
+                // Add the current user message to conversation history
+                conversationHistory.push({
+                    role: "user",
+                    content: userMessage
+                });
+                
+                // Create the messages array with system message and conversation history
+                // Only include the most recent 5 exchanges (10 messages) to stay within token limits
+                const messages = [
+                    systemMessage,
+                    ...conversationHistory.slice(-10)
+                ];
+                
+                // First try to use OpenAI API directly if available
+                try {
+                    console.log('Attempting to use OpenAI API directly...');
+                    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer YOUR_OPENAI_API_KEY' // Replace with environment variable
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-4-0125-preview', // Using GPT-4 Turbo
+                            messages: messages,
+                            temperature: 0.7,
+                            max_tokens: 1000
+                        })
+                    });
+                    
+                    if (openAIResponse.ok) {
+                        const openAIData = await openAIResponse.json();
+                        // Remove typing indicator
+                        removeTypingIndicator();
+                        
+                        const assistantMessage = openAIData.choices[0].message.content;
+                        
+                        // Add the assistant's response to conversation history
+                        conversationHistory.push({
+                            role: "assistant",
+                            content: assistantMessage
+                        });
+                        
+                        // Trim history if it gets too long
+                        if (conversationHistory.length > 20) {
+                            conversationHistory = conversationHistory.slice(-20);
+                        }
+                        
+                        // Add the response to the chat
+                        addBotMessage(assistantMessage);
+                        return;
+                    } else {
+                        console.log('Direct OpenAI API call failed, falling back to backend');
+                    }
+                } catch (openAIError) {
+                    console.error('Error with direct OpenAI call:', openAIError);
+                    console.log('Falling back to backend');
+                }
+                
+                // Fallback to your backend
+                console.log('Using backend API...');
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: messages,
+                        temperature: 0.7,
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`API responded with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Received API response');
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Extract the assistant's message from the response
+                let assistantMessage = "";
+                
+                if (data && data.choices && data.choices.length > 0) {
+                    if (data.choices[0].message && data.choices[0].message.content) {
+                        assistantMessage = data.choices[0].message.content;
+                    } else if (data.choices[0].content) {
+                        assistantMessage = data.choices[0].content;
+                    } else {
+                        throw new Error('Unexpected response format from API');
+                    }
+                    
+                    // Add the assistant's response to conversation history
+                    conversationHistory.push({
+                        role: "assistant",
+                        content: assistantMessage
+                    });
+                    
+                    // Trim history if it gets too long
