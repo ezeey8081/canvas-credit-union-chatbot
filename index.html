@@ -774,86 +774,59 @@
         }
         
         // Replace your current generateResponse function with this one (starts around line 453)
-        // This completely replaces your existing generateResponse function
-        async function generateResponse(userMessage) {
-            // Show typing indicator
-            showTypingIndicator();
-            
-            try {
-                // Backend URL - your Vercel deployment
-               const backendUrl = 'https://canvas-credit-union-backend.vercel.app/api/chat';
-                
-                console.log('Sending request to backend...');
-                
-                // Prepare the system message with financial expertise
-                const systemMessage = {
-                    role: "system",
-                    content: `You are an AI assistant for Canvas Credit Union. You help customers with their banking needs and financial questions. You need to respond to all financial questions with detailed, specific answers that demonstrate financial expertise.
-
-        Here is customer information you have access to:
-        ${JSON.stringify(userData, null, 2)}
-
-        FINANCIAL EXPERTISE GUIDELINES:
-        1. Always provide specific financial advice with numbers and percentages when relevant
-        2. Use financial industry terminology appropriately (APR, APY, amortization, etc.)
-        3. Cite specific financial regulations or best practices when applicable
-        4. Offer concrete examples with dollar amounts when explaining financial concepts
-        5. Suggest personalized financial strategies based on the customer's accounts and transactions
-        6. Include specific timeframes and deadlines for financial actions when relevant
-        7. Reference current financial market conditions when appropriate
-
-        RESPONSE RULES:
-        - Always address the customer by name (Alex) at least once in your response
-        - Format your responses with HTML when it improves readability (like <br> for line breaks or <strong> for emphasis)
-        - For any questions about account balances, provide the exact amount from the userData
-        - For credit score questions, explain the 12-point decrease from 742 to 730
-        - For savings advice, suggest concrete actions based on their spending patterns
-        - For loan questions, provide information about their auto loan and available options
-
-        FINANCIAL TOPICS YOU SHOULD BE ABLE TO DISCUSS IN DETAIL:
-        - Budgeting strategies and cash flow management
-        - Debt consolidation and management
-        - Credit score improvement tactics
-        - Retirement planning (401k, IRA, etc.)
-        - Emergency fund recommendations
-        - Auto loan refinancing options
-        - Mortgage pre-qualification and home buying process
-        - Investment basics (CDs, money market accounts, etc.)
-        - Tax implications of financial decisions
-        - Insurance needs and considerations
-        - College savings options (529 plans, etc.)
-        - Financial goal setting and monitoring
-
-        Do not include any suggestion chips in your response - those will be added separately.`
-                };
-                
-                // Add the current user message to conversation history
-                conversationHistory.push({
-                    role: "user",
-                    content: userMessage
-                });
-                
-                // Create the messages array with system message and conversation history
-                // Only include the most recent 5 exchanges (10 messages) to stay within token limits
-                const messages = [
-                    systemMessage,
-                    ...conversationHistory.slice(-10)
-                ];
-                
-                // Always use backend to protect API keys
-                // This ensures your OpenAI API key is never exposed in client-side code
-                console.log('Using backend API...');
-                // Send the request to your backend
-const response = await fetch(backendUrl, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        messages: messages,
-        temperature: 0.7,
-    })
-});
+        // Simple version of generateResponse that doesn't try to call any API
+function generateResponse(userMessage) {
+    // Skip API call and just use the fallback function
+    showTypingIndicator();
+    
+    // Simulate delay for more natural feel
+    setTimeout(() => {
+        // Remove typing indicator
+        removeTypingIndicator();
+        
+        // Convert to lowercase for easier matching
+        const lowerMessage = userMessage.toLowerCase();
+        
+        // Generate response based on message content
+        let response = '';
+        
+        if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage === 'hey') {
+            response = `Hello ${userData.name}! How can I assist you with your accounts today?`;
+        }
+        else if (lowerMessage.includes('balance') || lowerMessage.includes('check') || lowerMessage.includes('account')) {
+            if (lowerMessage.includes('checking')) {
+                response = `Your checking account balance is <strong>$${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
+                    Your last transaction was on ${userData.accounts.checking.lastTransaction}.<br><br>
+                    Recent transactions:<br>
+                    - ${userData.accounts.checking.transactions[0].date}: ${userData.accounts.checking.transactions[0].description} ($${userData.accounts.checking.transactions[0].amount})<br>
+                    - ${userData.accounts.checking.transactions[1].date}: ${userData.accounts.checking.transactions[1].description} ($${userData.accounts.checking.transactions[1].amount})`;
+            }
+            else if (lowerMessage.includes('savings')) {
+                response = `Your savings account balance is <strong>$${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
+                    Your account earns ${userData.accounts.savings.interestRate}% APY.<br>
+                    Interest earned this month: $${userData.accounts.savings.interestEarned}`;
+            }
+            else if (lowerMessage.includes('loan') || lowerMessage.includes('auto')) {
+                response = `Your auto loan balance is <strong>$${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
+                    Your current rate is ${userData.accounts.autoLoan.rate}%.<br>
+                    Next payment of $${userData.accounts.autoLoan.paymentAmount} is due on ${userData.accounts.autoLoan.nextPaymentDate}.<br>
+                    You have ${userData.accounts.autoLoan.remainingPayments} payments remaining.`;
+            }
+            else {
+                response = `Here's a summary of your accounts:<br><br>
+                    <strong>Checking:</strong> $${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                    <strong>Savings:</strong> $${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                    <strong>Auto Loan:</strong> $${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+        }
+        else {
+            response = `I'm here to help with your financial questions and banking needs. What would you like help with today?`;
+        }
+        
+        // Add the response to the chat
+        addBotMessage(response);
+    }, 1500); // 1.5 second delay
+}
                 
                 console.log('Response status:', response.status);
                 
