@@ -344,10 +344,23 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
         
-        // Function to handle user messages
+        // Simple test function to debug button clicks
+        function testButton() {
+            alert('Button clicked!');
+            console.log('Button clicked!');
+        }
+        
+        // Function to handle user messages - directly called by Send button
         function sendUserMessage() {
+            console.log("sendUserMessage called");
             const userInput = document.getElementById('user-input');
+            if (!userInput) {
+                console.error('Cannot find input element with id "user-input"');
+                return;
+            }
+            
             const message = userInput.value.trim();
+            console.log("User message:", message);
             
             if (message !== '') {
                 sendMessage(message);
@@ -364,8 +377,14 @@
         
         // Function to send a message and get a response
         async function sendMessage(message) {
+            console.log("sendMessage called with:", message);
+            
             // Display user message
             const chatMessages = document.getElementById('chat-messages');
+            if (!chatMessages) {
+                console.error('Cannot find element with id "chat-messages"');
+                return;
+            }
             
             const userMessageDiv = document.createElement('div');
             userMessageDiv.className = 'message user-message';
@@ -389,11 +408,11 @@
             });
             
             try {
-                // Try to get response from API, with fallback
+                // Try to get response from OpenAI, with fallback
                 let response;
                 
                 try {
-                    console.log("Attempting to call API...");
+                    console.log("Attempting to call OpenAI API...");
                     response = await callOpenAI(message);
                     
                     // Add to conversation history
@@ -407,7 +426,7 @@
                         messageHistory = messageHistory.slice(messageHistory.length - 10);
                     }
                 } catch (error) {
-                    console.error("API error:", error);
+                    console.error("OpenAI API error:", error);
                     response = getFallbackResponse(message);
                 }
                 
@@ -444,12 +463,11 @@
         // Function to call OpenAI API through our backend
         async function callOpenAI(userMessage) {
             try {
-                console.log("Making API call through our backend...");
+                console.log("Making API call through backend...");
                 
-                // Replace with your Vercel backend URL
-                const BACKEND_URL = 'https://your-backend-url.vercel.app/api/chat';
+                // Replace with your Vercel URL from Step 2
+                const BACKEND_URL = 'https://canvas-credit-union-backend.vercel.app/api/chat';
                 
-                // Simplified system message for training purposes
                 const systemMessage = `You are a helpful financial assistant for Canvas Credit Union. 
                 You have access to the following customer data:
                 ${JSON.stringify(userData, null, 2)}
@@ -466,6 +484,8 @@
                 <div class="suggestion-chips">
                     <div class="suggestion-chip" onclick="sendMessage('Question text')">Button Label</div>
                 </div>`;
+                
+                console.log("BACKEND_URL:", BACKEND_URL);
                 
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
@@ -489,6 +509,10 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 console.log("API Response:", data);
                 
@@ -497,7 +521,7 @@
                     throw new Error(data.error.message || "Error calling API");
                 }
                 
-                // Handle the new OpenAI API response format
+                // Handle the OpenAI API response format
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
                     return data.choices[0].message.content;
                 } else {
@@ -512,6 +536,7 @@
         
         // Function to get a fallback response if API fails
         function getFallbackResponse(message) {
+            console.log("Using fallback response for:", message);
             const lowerMessage = message.toLowerCase();
             
             // Check balance or account-related queries
@@ -559,4 +584,80 @@
                 return `Based on your current financial situation, here are some options for a new car:<br><br>
                     1. <strong>Create a dedicated car savings fund</strong> - I see you already have $800 in your vacation fund. A similar approach for a car down payment would work well.<br><br>
                     2. <strong>Make extra payments on your current auto loan</strong> - Your current loan has 18 payments remaining. Paying it off sooner would free up $375.42 monthly that could go toward your next car.<br><br>
-                    3. <strong>Consider a HELOC for the purchase</strong>
+                    3. <strong>Consider a HELOC for the purchase</strong> - With today's rates, this might be more cost-effective than a traditional auto loan.<br><br>
+                    Would you like me to help you set up a car savings plan?
+                    <div class="suggestion-chips">
+                        <div class="suggestion-chip" onclick="sendMessage('Set up car savings fund')">Set up car savings fund</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Extra auto loan payments')">Extra loan payments</div>
+                    </div>`;
+            }
+            
+            // Default response for any other query
+            else {
+                return `I'm here to help with your banking and financial questions. You can ask me about:<br><br>
+                    - Account balances and transactions<br>
+                    - Credit score information<br>
+                    - Savings strategies<br>
+                    - Loan options<br>
+                    - Budgeting assistance<br>
+                    - Bill payments<br><br>
+                    What would you like to know about?
+                    <div class="suggestion-chips">
+                        <div class="suggestion-chip" onclick="sendMessage('Check my balance')">Check my balance</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Why did my credit score change?')">Credit score info</div>
+                        <div class="suggestion-chip" onclick="sendMessage('How can I save more?')">Saving strategies</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Help with loan options')">Loan options</div>
+                    </div>`;
+            }
+        }
+        
+        // Debug function - run this when the page loads to check if JavaScript is working
+        window.onload = function() {
+            console.log("Page loaded, JavaScript is running");
+        };
+        
+        // Open-ended section for training the AI
+        // This is where you would add code to collect user feedback and improve the model
+        
+        /*
+        TRAINING SECTION - TO BE IMPLEMENTED
+        
+        Ideas for enhancing the chatbot with training:
+        
+        1. Feedback Collection:
+           - Add thumbs up/down buttons after each response
+           - Store which responses were helpful vs unhelpful
+        
+        2. Response Improvement:
+           - Collect alternative phrasings for common questions
+           - Gather follow-up questions users ask after responses
+        
+        3. Data Enrichment:
+           - Track which financial topics users ask about most frequently
+           - Use this to expand the fallback responses for popular topics
+        
+        4. Fine-tuning:
+           - Export conversation logs (with user permission)
+           - Use these to fine-tune the OpenAI model for better responses
+           - This requires data handling and model training expertise
+        
+        Implementation example:
+        
+        function collectFeedback(messageId, isPositive) {
+            // Store feedback for the message
+            const feedback = {
+                messageId: messageId,
+                isPositive: isPositive,
+                timestamp: new Date().toISOString()
+            };
+            
+            // In a real implementation, you would send this to your backend
+            console.log("Feedback collected:", feedback);
+            
+            // Thank the user for feedback
+            alert("Thank you for your feedback! This helps us improve our assistant.");
+        }
+        */
+    </script>
+</body>
+</html>
