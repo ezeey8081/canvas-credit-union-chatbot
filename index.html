@@ -269,14 +269,8 @@ Keep responses concise and helpful. Do not mention that you're an AI or that you
 Do not include any suggestion chips in your response - those will be added separately.`
         };
 
-        // Conversation history for context
-        let conversationHistory = [
-            systemMessage,
-            {
-                role: "assistant",
-                content: "Hi there! I'm your Canvas Credit Union assistant. How can I help you today?"
-            }
-        ];
+        // The welcome message
+        const welcomeMessage = "Hi there! I'm your Canvas Credit Union assistant. How can I help you today?";
 
         // Common suggestion chips to display after bot messages
         const commonChips = [
@@ -291,6 +285,39 @@ Do not include any suggestion chips in your response - those will be added separ
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
 
+        // Simplified mock response function - this simulates what the API would do
+        // Replace this with real API call when backend is working
+        function getMockResponse(message) {
+            if (message.toLowerCase().includes('balance')) {
+                return `Here's a summary of your accounts:<br><br>
+                    <strong>Checking:</strong> $${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                    <strong>Savings:</strong> $${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                    <strong>Auto Loan:</strong> $${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+            else if (message.toLowerCase().includes('credit') || message.toLowerCase().includes('score')) {
+                return `Your current credit score is <strong>${userData.customer.creditScore}</strong>, which decreased from ${userData.customer.previousCreditScore} last month.<br><br>
+                    This change appears to be due to:<br>
+                    - Recent credit application<br>
+                    - Increased credit utilization<br><br>
+                    Based on your accounts, I recommend paying down your credit card balance to improve your score.`;
+            }
+            else if (message.toLowerCase().includes('save') || message.toLowerCase().includes('saving')) {
+                return `Looking at your spending patterns, I've identified some opportunities to help you save consistently.<br><br>
+                    Based on your cash flow, you could comfortably save about $175/month without feeling stretched. Here are two methods that might work for you:<br><br>
+                    1. <strong>Automatic Micro-Saving:</strong> Round-Up Savings would save about $45-60/month.<br><br>
+                    2. <strong>Smart Scheduled Saving:</strong> Automatic weekly transfers of $40 after your paycheck deposits.`;
+            }
+            else if (message.toLowerCase().includes('loan') || message.toLowerCase().includes('car') || message.toLowerCase().includes('auto')) {
+                return `Based on your current financial situation, here are some options for your auto loan:<br><br>
+                    1. <strong>Make extra payments</strong> - Your current loan has payments of $${userData.accounts.autoLoan.paymentAmount} with the next one due ${userData.accounts.autoLoan.nextPaymentDate}.<br><br>
+                    2. <strong>Refinance options</strong> - With your credit profile, you might qualify for a lower rate.<br><br>
+                    3. <strong>Payoff strategy</strong> - I can help you develop a plan to pay off your loan sooner.`;
+            }
+            else {
+                return `I'm here to help with your financial questions and banking needs. How can I assist you today?`;
+            }
+        }
+
         // Display initial welcome message
         document.addEventListener('DOMContentLoaded', function() {
             // Send button click event
@@ -304,7 +331,18 @@ Do not include any suggestion chips in your response - those will be added separ
             });
 
             // Add initial bot message
-            addBotMessage(conversationHistory[1].content, commonChips);
+            addBotMessage(welcomeMessage, commonChips);
+
+            // Explain that this is using mock data
+            const infoDiv = document.createElement('div');
+            infoDiv.style.padding = '10px';
+            infoDiv.style.margin = '10px 0';
+            infoDiv.style.backgroundColor = '#e8f5e9';
+            infoDiv.style.border = '1px solid #c8e6c9';
+            infoDiv.style.borderRadius = '5px';
+            infoDiv.style.color = '#2e7d32';
+            infoDiv.textContent = 'This is a test version using simulated responses. Connect to the real API when backend issues are resolved.';
+            chatBox.appendChild(infoDiv);
         });
 
         // Function to send a message from input field
@@ -312,7 +350,7 @@ Do not include any suggestion chips in your response - those will be added separ
             const message = messageInput.value.trim();
             if (message !== '') {
                 addUserMessage(message);
-                sendToChatGPT(message);
+                processMessage(message);
                 messageInput.value = '';
             }
         }
@@ -320,7 +358,7 @@ Do not include any suggestion chips in your response - those will be added separ
         // Function to send a message from suggestion chips
         function sendChipMessage(message) {
             addUserMessage(message);
-            sendToChatGPT(message);
+            processMessage(message);
         }
 
         // Function to add user message to chat
@@ -330,12 +368,6 @@ Do not include any suggestion chips in your response - those will be added separ
             messageElement.textContent = message;
             chatBox.appendChild(messageElement);
             scrollToBottom();
-
-            // Add to conversation history
-            conversationHistory.push({
-                role: "user",
-                content: message
-            });
         }
 
         // Function to add bot message to chat
@@ -437,7 +469,42 @@ Do not include any suggestion chips in your response - those will be added separ
             return commonChips;
         }
 
-        // Function to send message to backend that will relay to ChatGPT
+        // Function to process messages - this will use the mock function for now
+        // Later, you can replace this with the real API call
+        function processMessage(message) {
+            // Show thinking indicator
+            showThinkingIndicator();
+            
+            // Simulate a delay to make it feel more natural
+            setTimeout(() => {
+                // Remove thinking indicator
+                removeThinkingIndicator();
+                
+                // Get response from mock function
+                const response = getMockResponse(message);
+                
+                // Determine appropriate suggestion chips based on the message
+                const contextChips = getContextSpecificChips(message);
+                
+                // Add bot response to the chat
+                addBotMessage(response, contextChips);
+                
+                // Add a note about switching to real API
+                const noteDiv = document.createElement('div');
+                noteDiv.style.fontSize = '12px';
+                noteDiv.style.color = '#888';
+                noteDiv.style.fontStyle = 'italic';
+                noteDiv.style.marginTop = '5px';
+                noteDiv.textContent = "Note: This is a simulated response. Replace with OpenAI API when backend is ready.";
+                chatBox.appendChild(noteDiv);
+                scrollToBottom();
+                
+            }, 1500); // 1.5 second delay
+        }
+
+        // This is the function you'll use when the backend is working
+        // Uncomment and modify as needed
+        /*
         async function sendToChatGPT(message) {
             // Show thinking indicator
             showThinkingIndicator();
@@ -446,7 +513,7 @@ Do not include any suggestion chips in your response - those will be added separ
                 // Backend URL - your Vercel deployment
                 const backendUrl = 'https://canvas-credit-union-backend.vercel.app/api/chat';
                 
-                console.log('Sending to backend:', conversationHistory);
+                console.log('Sending to backend:', message);
                 
                 const response = await fetch(backendUrl, {
                     method: 'POST',
@@ -454,7 +521,10 @@ Do not include any suggestion chips in your response - those will be added separ
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        messages: conversationHistory,
+                        messages: [
+                            systemMessage,
+                            { role: "user", content: message }
+                        ],
                         temperature: 0.7,
                     })
                 });
@@ -471,43 +541,26 @@ Do not include any suggestion chips in your response - those will be added separ
                 // Remove thinking indicator
                 removeThinkingIndicator();
                 
-                // Process the response based on the format returned
+                // Process the response
+                let assistantMessage;
+                
                 if (data && data.choices && data.choices.length > 0) {
-                    let assistantMessage;
-                    
-                    // Check if the response format has message.content (OpenAI API v1) or just content (direct response)
                     if (data.choices[0].message && data.choices[0].message.content) {
                         assistantMessage = data.choices[0].message.content;
                     } else if (data.choices[0].content) {
                         assistantMessage = data.choices[0].content;
                     } else {
-                        console.error('Unexpected response format:', data);
                         throw new Error('Unexpected response format from API');
                     }
-                    
-                    // Add to conversation history
-                    conversationHistory.push({
-                        role: "assistant",
-                        content: assistantMessage
-                    });
-                    
-                    // Trim conversation history if it gets too long
-                    if (conversationHistory.length > 20) {
-                        const systemMsg = conversationHistory[0];
-                        conversationHistory = [
-                            systemMsg,
-                            ...conversationHistory.slice(-10)
-                        ];
-                    }
-                    
-                    // Determine appropriate suggestion chips based on the message
-                    const contextChips = getContextSpecificChips(assistantMessage);
-                    
-                    // Add assistant's response to the chat
-                    addBotMessage(assistantMessage, contextChips);
                 } else {
-                    throw new Error('Unexpected response format from API');
+                    throw new Error('No choices in API response');
                 }
+                
+                // Determine appropriate suggestion chips based on the message
+                const contextChips = getContextSpecificChips(assistantMessage);
+                
+                // Add assistant's response to the chat
+                addBotMessage(assistantMessage, contextChips);
                 
             } catch (error) {
                 console.error('Error sending message to AI:', error);
@@ -521,12 +574,14 @@ Do not include any suggestion chips in your response - those will be added separ
                 errorDiv.textContent = "I'm having trouble connecting to our system. Please try again in a moment.";
                 chatBox.appendChild(errorDiv);
                 
-                // Add a simple response so the user isn't left hanging
+                // Add a fallback response
                 setTimeout(() => {
-                    addBotMessage("I apologize for the technical difficulty. Let me try to help you with your question. What specifically would you like to know about your accounts or financial options?");
+                    const mockResponse = getMockResponse(message);
+                    addBotMessage("I apologize for the technical difficulty. Here's what I can tell you: " + mockResponse);
                 }, 1000);
             }
         }
+        */
     </script>
 </body>
 </html>
