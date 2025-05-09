@@ -781,7 +781,7 @@
             
             try {
                 // Backend URL - your Vercel deployment
-                const backendUrl = 'https://canvas-credit-union-backend.vercel.app/api/chat';
+               const backendUrl = 'https://canvas-credit-union-backend.vercel.app/api/chat';
                 
                 console.log('Sending request to backend...');
                 
@@ -843,16 +843,17 @@
                 // Always use backend to protect API keys
                 // This ensures your OpenAI API key is never exposed in client-side code
                 console.log('Using backend API...');
-                const response = await fetch(backendUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        messages: messages,
-                        temperature: 0.7,
-                    })
-                });
+                // Send the request to your backend
+const response = await fetch(backendUrl, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        messages: messages,
+        temperature: 0.7,
+    })
+});
                 
                 console.log('Response status:', response.status);
                 
