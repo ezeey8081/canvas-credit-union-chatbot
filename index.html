@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Credit Union Assistant</title>
+    <style>
+        :root {
+            --primary: #1a76d2;
+            --primary-dark: #0d47a1;
+            --light-gray: #f5f5f5;
+            --mid-gray: #e0e0e0;
+            --dark-gray: #757575;
+            --text: #212121;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #fff;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        header {
+            padding: 20px 0;
+            background-color: #fff;
+            border-bottom: 1px solid var(--mid-gray);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 20px;
+        }
+        
+        .account-summary {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .account-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .account-card h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .account-card .balance {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .account-card .details {
+            color: var(--dark-gray);
+            font-size: 14px;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+            border-radius: 8px;
+            border: 1px solid var(--mid-gray);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        
+        .user-message {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            background-color: var(--light-gray);
+            color: var(--text);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid var(--mid-gray);
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--mid-gray);
+            border-radius: 30px;
+            outline: none;
+            font-size: 15px;
+        }
+        
+        .chat-input button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        
+        .chat-input button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .suggestion-chip {
+            background-color: var(--light-gray);
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .suggestion-chip:hover {
+            background-color: var(--mid-gray);
+        }
+        
+        .typing-indicator {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: var(--light-gray);
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            float: left;
+            margin: 0 1px;
+            background-color: var(--dark-gray);
+            display: block;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        
+        .typing-indicator span:nth-of-type(1) {
+            animation: 1s blink infinite 0.3333s;
+        }
+        
+        .typing-indicator span:nth-of-type(2) {
+            animation: 1s blink infinite 0.6666s;
+        }
+        
+        .typing-indicator span:nth-of-type(3) {
+            animation: 1s blink infinite 0.9999s;
+        }
+        
+        @keyframes blink {
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .account-card {
+                min-width: 100%;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Canvas Credit Union</div>
+        </header>
+        
+        <div class="account-summary">
+            <div class="account-card">
+                <h3>Checking Account</h3>
+                <div class="balance">$2,345.82</div>
+                <div class="details">Last transaction: 05/06/2025</div>
+            </div>
+            
+            <div class="account-card">
+                <h3>Savings Account</h3>
+                <div class="balance">$5,120.50</div>
+                <div class="details">Interest earned this month: $2.15</div>
+            </div>
+            
+            <div class="account-card">
+                <h3>Auto Loan</h3>
+                <div class="balance">$12,489.65</div>
+                <div class="details">Next payment: 05/15/2025</div>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>Financial Assistant</h2>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    Hi there! I'm your Canvas Credit Union assistant. How can I help you today?
+                    <div class="suggestion-chips">
+                        <div class="suggestion-chip" onclick="sendMessage('Check my balance')">Check my balance</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Why did my credit score change?')">Why did my credit score change?</div>
+                        <div class="suggestion-chip" onclick="sendMessage('How can I save more?')">How can I save more?</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Help with loan options')">Help with loan options</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendUserMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample user data - in a real implementation, this would come from your backend
+        const userData = {
+            name: "Alex Johnson",
+            accounts: {
+                checking: {
+                    balance: 2345.82,
+                    number: "****4567",
+                    transactions: [
+                        { date: "2025-05-06", description: "GROCERY STORE", amount: -78.34 },
+                        { date: "2025-05-05", description: "PSP*PAY", amount: -42.00 },
+                        { date: "2025-05-03", description: "DEPOSIT", amount: 1850.00 },
+                        { date: "2025-05-01", description: "ELECTRIC COMPANY", amount: -142.56 }
+                    ]
+                },
+                savings: {
+                    balance: 5120.50,
+                    number: "****7890",
+                    interestRate: 1.25,
+                    lastInterestAmount: 2.15
+                },
+                autoLoan: {
+                    balance: 12489.65,
+                    rate: 5.25,
+                    paymentAmount: 375.42,
+                    nextPaymentDate: "2025-05-15",
+                    remainingPayments: 18
+                }
+            },
+            creditScore: {
+                current: 730,
+                previous: 742,
+                factors: ["Recent credit application", "Increased credit utilization"]
+            },
+            upcomingPayments: [
+                { description: "Electricity Bill", amount: 145.00, dueDate: "2025-05-11" },
+                { description: "Car Insurance", amount: 98.50, dueDate: "2025-05-13" },
+                { description: "Gym Membership", amount: 24.99, dueDate: "2025-05-16" }
+            ],
+            savingsGoals: [
+                { name: "Emergency Fund", target: 10000, current: 5120.50 },
+                { name: "Vacation", target: 2500, current: 800 }
+            ]
+        };
+        
+        // OpenAI API key - Replace with your actual API key
+        const OPENAI_API_KEY = 'your-api-key-here';
+        
+        // Keep track of conversation history for context
+        let messageHistory = [];
+        
+        // Helper function to format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        }
+        
+        // Helper function to format dates
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        
+        // Function to handle user messages
+        function sendUserMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            
+            if (message !== '') {
+                sendMessage(message);
+                userInput.value = '';
+            }
+        }
+        
+        // Function to handle Enter key
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendUserMessage();
+            }
+        }
+        
+        // Function to call OpenAI API
+        async function callOpenAI(userMessage) {
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo', // You can use gpt-4 for better results
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `You are a helpful financial assistant for Canvas Credit Union. 
+                                You have access to the following customer data:
+                                ${JSON.stringify(userData)}
+                                
+                                Always respond in a friendly, helpful manner. Provide specific financial advice
+                                based on the customer's account information. Format your responses with HTML
+                                for better readability (like <br> for line breaks and <strong> for emphasis).
+                                
+                                For any questions about balance, provide the exact amount from the userData.
+                                For credit score questions, explain the factors affecting the score.
+                                For savings advice, suggest concrete actions based on their spending patterns.
+                                For loan questions, compare available options based on their profile.
+                                
+                                Never share account numbers, only the last 4 digits prefixed with asterisks.
+                                Don't make up information that's not in the user data provided.
+                                
+                                After your main response, include helpful suggestions for what the user might 
+                                want to ask about next. Format them as buttons in HTML like this:
+                                <div class="suggestion-chips">
+                                    <div class="suggestion-chip" onclick="sendMessage('Some question')">Button Text</div>
+                                </div>`
+                            },
+                            ...messageHistory,
+                            {
+                                role: 'user',
+                                content: userMessage
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    return data.choices[0].message.content;
+                } else {
+                    console.error('Unexpected response format:', data);
+                    return "I'm sorry, I encountered an error processing your request. Please try again later.";
+                }
+            } catch (error) {
+                console.error('Error calling OpenAI API:', error);
+                return "I'm sorry, I encountered an error processing your request. Please try again later.";
+            }
+        }
+        
+        // Function to get a fallback response if API fails
+        function getFallbackResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Check balance or account-related queries
+            if (lowerMessage.includes('balance') || lowerMessage.includes('account') || lowerMessage.includes('check')) {
+                return `Here's a summary of your accounts:<br><br>
+                    <strong>Checking:</strong> ${formatCurrency(userData.accounts.checking.balance)}<br>
+                    <strong>Savings:</strong> ${formatCurrency(userData.accounts.savings.balance)}<br>
+                    <strong>Auto Loan:</strong> ${formatCurrency(userData.accounts.autoLoan.balance)}<br><br>
+                    Would you like details about a specific account?
+                    <div class="suggestion-chips">
+                        <div class="suggestion-chip" onclick="sendMessage('Checking details')">Checking details</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Savings details')">Savings details</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Loan details')">Loan details</div>
+                    </div>`;
+            }
+            
+            // Credit score related questions
+            else if (lowerMessage.includes('credit score') || lowerMessage.includes('score')) {
+                return `Your current credit score is <strong>${userData.creditScore.current}</strong>, which decreased from ${userData.creditScore.previous} last month.<br><br>
+                    This change appears to be due to:<br>
+                    - ${userData.creditScore.factors[0]}<br>
+                    - ${userData.creditScore.factors[1]}<br><br>
+                    Based on your accounts, here are personalized recommendations to improve your score.`;
+            }
+            
+            // Default response
+            else {
+                return `I'm here to help with your banking and financial questions. You can ask me about:<br><br>
+                    - Account balances and transactions<br>
+                    - Credit score information<br>
+                    - Savings strategies<br>
+                    - Loan options<br>
+                    - Budgeting assistance<br>
+                    - Bill payments<br><br>
+                    What would you like to know about?
+                    <div class="suggestion-chips">
+                        <div class="suggestion-chip" onclick="sendMessage('Check my balance')">Check my balance</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Why did my credit score change?')">Credit score info</div>
+                        <div class="suggestion-chip" onclick="sendMessage('How can I save more?')">Saving strategies</div>
+                        <div class="suggestion-chip" onclick="sendMessage('Help with loan options')">Loan options</div>
+                    </div>`;
+            }
+        }
+        
+        // Function to send a message and get a response
+        async function sendMessage(message) {
+            // Display user message
+            const chatMessages = document.getElementById('chat-messages');
+            
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'message user-message';
+            userMessageDiv.textContent = message;
+            chatMessages.appendChild(userMessageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Create and show typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+            chatMessages.appendChild(typingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Add the user message to history for context
+            messageHistory.push({
+                role: 'user',
+                content: message
+            });
+            
+            try {
+                // Call OpenAI API
+                const response = await callOpenAI(message);
+                
+                // Remove typing indicator
+                chatMessages.removeChild(typingIndicator);
+                
+                // Add the AI response to history for context
+                messageHistory.push({
+                    role: 'assistant',
+                    content: response
+                });
+                
+                // Keep conversation history manageable (last 10 messages)
+                if (messageHistory.length > 10) {
+                    messageHistory = messageHistory.slice(messageHistory.length - 10);
+                }
+                
+                // Display bot response
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'message bot-message';
+                botMessageDiv.innerHTML = response;
+                chatMessages.appendChild(botMessageDiv);
+            } catch (error) {
+                console.error('Error getting response:', error);
+                
+                // Remove typing indicator
+                chatMessages.removeChild(typingIndicator);
+                
+                // Display fallback response
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'message bot-message';
+                botMessageDiv.innerHTML = getFallbackResponse(message);
+                chatMessages.appendChild(botMessageDiv);
+            }
+            
+            // Scroll to bottom again after adding bot message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
