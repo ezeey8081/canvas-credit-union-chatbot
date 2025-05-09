@@ -886,3 +886,139 @@ const response = await fetch(backendUrl, {
                     });
                     
                     // Trim history if it gets too long
+                    if (conversationHistory.length > 20) {
+                        conversationHistory = conversationHistory.slice(-20);
+                    }
+                    
+                    // Add the response to the chat
+                    addBotMessage(assistantMessage);
+                }
+            } catch (error) {
+                console.error('Error getting response:', error);
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Fall back to the original response generator
+                fallbackGenerateResponse(userMessage);
+            }
+        }
+
+        // Add this function at the end of your script
+        // This is a fallback function that will be used if the API call fails
+        function fallbackGenerateResponse(userMessage) {
+            // Show typing indicator again
+            showTypingIndicator();
+            
+            // Convert to lowercase for easier matching
+            const lowerMessage = userMessage.toLowerCase();
+            
+            // Simulate delay for more natural feel
+            setTimeout(() => {
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Generate response based on message content
+                let response = '';
+                
+                if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage === 'hey') {
+                    response = `Hello ${userData.name}! How can I assist you with your accounts today?`;
+                }
+                else if (lowerMessage.includes('balance') || lowerMessage.includes('check') || lowerMessage.includes('account')) {
+                    if (lowerMessage.includes('checking')) {
+                        response = `Your checking account balance is <strong>$${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
+                            Your last transaction was on ${userData.accounts.checking.lastTransaction}.<br><br>
+                            Recent transactions:<br>
+                            - ${userData.accounts.checking.transactions[0].date}: ${userData.accounts.checking.transactions[0].description} ($${userData.accounts.checking.transactions[0].amount})<br>
+                            - ${userData.accounts.checking.transactions[1].date}: ${userData.accounts.checking.transactions[1].description} ($${userData.accounts.checking.transactions[1].amount})`;
+                    }
+                    else if (lowerMessage.includes('savings')) {
+                        response = `Your savings account balance is <strong>$${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
+                            Your account earns ${userData.accounts.savings.interestRate}% APY.<br>
+                            Interest earned this month: $${userData.accounts.savings.interestEarned}`;
+                    }
+                    else if (lowerMessage.includes('loan') || lowerMessage.includes('auto')) {
+                        response = `Your auto loan balance is <strong>$${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>.<br><br>
+                            Your current rate is ${userData.accounts.autoLoan.rate}%.<br>
+                            Next payment of $${userData.accounts.autoLoan.paymentAmount} is due on ${userData.accounts.autoLoan.nextPaymentDate}.<br>
+                            You have ${userData.accounts.autoLoan.remainingPayments} payments remaining.`;
+                    }
+                    else {
+                        response = `Here's a summary of your accounts:<br><br>
+                            <strong>Checking:</strong> $${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                            <strong>Savings:</strong> $${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                            <strong>Auto Loan:</strong> $${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                }
+                else if (lowerMessage.includes('credit score') || (lowerMessage.includes('credit') && lowerMessage.includes('score'))) {
+                    response = `Your current credit score is <strong>${userData.creditScore.current}</strong>, which decreased from ${userData.creditScore.previous} last month.<br><br>
+                        This change appears to be due to:<br>
+                        - ${userData.creditScore.factors[0]}<br>
+                        - ${userData.creditScore.factors[1]}<br><br>
+                        To improve your score, consider paying down your credit card balances and avoiding new credit applications in the next few months.`;
+                }
+                else if (lowerMessage.includes('save') || lowerMessage.includes('saving')) {
+                    if (lowerMessage.includes('round-up')) {
+                        response = `Round-Up Savings automatically rounds up your debit card purchases to the nearest dollar and transfers the difference to your savings account.<br><br>
+                            For example, if you spend $3.50 on coffee, we'll round up to $4.00 and transfer $0.50 to savings. Based on your spending habits, this could help you save an additional $45-60 per month without changing your routine.`;
+                    }
+                    else if (lowerMessage.includes('weekly') || lowerMessage.includes('automatic') || lowerMessage.includes('transfer')) {
+                        response = `Automatic transfers are a great way to build savings consistently.<br><br>
+                            Based on your income and expenses, I recommend setting up a weekly transfer of $40 from checking to savings every Friday, after your paycheck is deposited but before weekend spending typically occurs.<br><br>
+                            Would you like me to help you set up these automatic transfers?`;
+                    }
+                    else if (lowerMessage.includes('goal')) {
+                        response = `Setting up savings goals helps you stay motivated and track progress.<br><br>
+                            Based on your current savings rate, you could reach a $10,000 emergency fund goal in about 12 months with regular $400 monthly contributions.<br><br>
+                            Our mobile app lets you create visual savings goals with target dates, automatic contributions, and progress tracking.`;
+                    }
+                    else {
+                        response = `Looking at your spending patterns, I've identified some opportunities to help you save consistently:<br><br>
+                            1. <strong>Automatic Micro-Saving:</strong> Round-Up Savings would save about $45-60/month by rounding up purchases.<br><br>
+                            2. <strong>Smart Scheduled Saving:</strong> Automatic weekly transfers of $40 after your paycheck deposits but before weekend spending.<br><br>
+                            3. <strong>Reduce Recurring Expenses:</strong> I noticed several subscription services totaling $37.98/month that could be consolidated.`;
+                    }
+                }
+                else if (lowerMessage.includes('loan') || lowerMessage.includes('auto')) {
+                    if (lowerMessage.includes('extra') || lowerMessage.includes('payment')) {
+                        response = `Making extra payments on your auto loan can save you money on interest and help you pay off your loan sooner.<br><br>
+                            If you make an additional payment of $100 each month toward your auto loan:<br>
+                            - You'll pay off your loan about 4 months earlier<br>
+                            - You'll save approximately $304 in interest<br><br>
+                            Extra payments are applied directly to the principal, reducing the amount of interest you pay over the life of the loan.`;
+                    }
+                    else if (lowerMessage.includes('refinance')) {
+                        response = `Based on your current credit score of ${userData.creditScore.current} and market conditions, you might qualify for refinancing your auto loan at a lower rate.<br><br>
+                            Your current rate is ${userData.accounts.autoLoan.rate}%. If you refinance to a rate of 4.25% while keeping the same term:<br>
+                            - Your monthly payment would decrease by about $25<br>
+                            - You'd save approximately $450 in total interest<br><br>
+                            Would you like me to connect you with a loan officer to discuss refinancing options?`;
+                    }
+                    else if (lowerMessage.includes('payoff')) {
+                        response = `With your current payment schedule of $${userData.accounts.autoLoan.paymentAmount} per month, your auto loan will be fully paid off after ${userData.accounts.autoLoan.remainingPayments} more payments.<br><br>
+                            Your projected payoff date is August 2026.<br><br>
+                            If you increased your monthly payment to $475 (an extra $100), you could pay off your loan by April 2026 and save approximately $304 in interest.`;
+                    }
+                    else {
+                        response = `Your auto loan details:<br><br>
+                            - Current balance: $${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                            - Interest rate: ${userData.accounts.autoLoan.rate}%<br>
+                            - Monthly payment: $${userData.accounts.autoLoan.paymentAmount}<br>
+                            - Next payment due: ${userData.accounts.autoLoan.nextPaymentDate}<br>
+                            - Remaining payments: ${userData.accounts.autoLoan.remainingPayments}<br><br>
+                            Would you like to discuss options for paying off your loan sooner or refinancing at a potentially lower rate?`;
+                    }
+                }
+                else {
+                    response = `I'm here to help with your financial questions and banking needs. Here are some things I can assist with:<br><br>
+                        - Account balances and recent transactions<br>
+                        - Information about your credit score<br>
+                        - Savings strategies tailored to your spending habits<br>
+                        - Details and options for your auto loan<br><br>
+                        What would you like help with today?`;
+                }
+                
+                // Add the response to the chat
+                addBotMessage(response);
+            }, 1500); // 1.5 second delay
+        }
