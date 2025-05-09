@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Credit Union Simple Chatbot</title>
+    <title>Canvas Credit Union AI Chatbot</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -136,6 +136,46 @@
             color: #666;
             font-size: 14px;
         }
+
+        .thinking {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .thinking-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #888;
+            border-radius: 50%;
+            animation: thinking 1.4s infinite ease-in-out both;
+        }
+
+        .thinking-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .thinking-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes thinking {
+            0%, 80%, 100% { 
+                transform: scale(0);
+            } 
+            40% { 
+                transform: scale(1.0);
+            }
+        }
+
+        .error-message {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ffcdd2;
+        }
     </style>
 </head>
 <body>
@@ -167,7 +207,7 @@
         <div class="chat-box" id="chat-box">
             <!-- Initial bot message -->
             <div class="bot-message">
-                Hi there! I'm your Canvas Credit Union assistant. How can I help you today?
+                Hi there! I'm your Canvas Credit Union assistant powered by AI. How can I help you today?
                 <div class="suggestion-chips">
                     <div class="chip" onclick="sendChipMessage('Check my balance')">Check my balance</div>
                     <div class="chip" onclick="sendChipMessage('Why did my credit score change?')">Credit score</div>
@@ -184,13 +224,65 @@
     </div>
 
     <script>
-        // Simple user data model
+        // User data model for context enhancement
         const userData = {
-            checking: { balance: 2345.82 },
-            savings: { balance: 5120.50, interest: 2.15 },
-            loan: { balance: 12489.65, payment: 375.42, nextDate: "05/15/2025" },
-            creditScore: { current: 730, previous: 742 }
+            customer: {
+                name: "Alex Johnson",
+                since: "2018",
+                creditScore: 730,
+                previousCreditScore: 742
+            },
+            accounts: {
+                checking: { 
+                    balance: 2345.82,
+                    accountNumber: "****4567",
+                    transactions: [
+                        { date: "2025-05-06", description: "GROCERY STORE", amount: -78.34 },
+                        { date: "2025-05-05", description: "PSP*PAY", amount: -42.00 },
+                        { date: "2025-05-03", description: "DEPOSIT", amount: 1850.00 },
+                        { date: "2025-05-01", description: "ELECTRIC COMPANY", amount: -142.56 }
+                    ]
+                },
+                savings: { 
+                    balance: 5120.50,
+                    accountNumber: "****7890",
+                    interestRate: 1.25,
+                    lastInterestAmount: 2.15
+                },
+                autoLoan: {
+                    balance: 12489.65,
+                    rate: 5.25,
+                    paymentAmount: 375.42,
+                    nextPaymentDate: "2025-05-15",
+                    remainingPayments: 18
+                }
+            }
         };
+
+        // Conversation history for context
+        let conversationHistory = [
+            {
+                role: "system", 
+                content: `You are an AI assistant for Canvas Credit Union. You help customers with their banking needs and financial questions.
+
+Here is customer information you have access to:
+${JSON.stringify(userData, null, 2)}
+
+Always respond in a friendly, helpful manner. Format your responses with HTML when it improves readability (like <br> for line breaks or <strong> for emphasis).
+
+For any questions about account balances, provide the exact amount from the userData.
+For credit score questions, explain the 12-point decrease from 742 to 730 is likely due to recent credit applications or increased utilization.
+For savings advice, suggest concrete actions based on their spending patterns.
+For loan questions, provide information about their auto loan and available options.
+
+Keep responses concise and helpful. Do not mention that you're an AI or that you have limited knowledge - just be helpful.
+Do not include any suggestion chips in your response - those will be added separately.`
+            },
+            {
+                role: "assistant",
+                content: "Hi there! I'm your Canvas Credit Union assistant. How can I help you today?"
+            }
+        ];
 
         // Get DOM elements
         const chatBox = document.getElementById('chat-box');
@@ -215,7 +307,7 @@
             const message = messageInput.value.trim();
             if (message !== '') {
                 addUserMessage(message);
-                processMessage(message);
+                sendToChatGPT(message);
                 messageInput.value = '';
             }
         }
@@ -223,7 +315,7 @@
         // Function to send a message from suggestion chips
         function sendChipMessage(message) {
             addUserMessage(message);
-            processMessage(message);
+            sendToChatGPT(message);
         }
 
         // Function to add user message to chat
@@ -233,6 +325,12 @@
             messageElement.textContent = message;
             chatBox.appendChild(messageElement);
             scrollToBottom();
+
+            // Add to conversation history
+            conversationHistory.push({
+                role: "user",
+                content: message
+            });
         }
 
         // Function to add bot message to chat
@@ -266,51 +364,22 @@
             
             chatBox.appendChild(messageElement);
             scrollToBottom();
-        }
 
-        // Function to process the user's message and generate a response
-        function processMessage(message) {
-            // Show thinking indicator
-            showThinkingIndicator();
+            // Add to conversation history
+            conversationHistory.push({
+                role: "assistant",
+                content: message
+            });
 
-            // Lowercase message for easier matching
-            const lowerMessage = message.toLowerCase();
-            
-            // Simulate processing delay
-            setTimeout(() => {
-                // Remove thinking indicator
-                removeThinkingIndicator();
-                
-                // Determine response based on message content
-                if (lowerMessage.includes('balance') || lowerMessage.includes('account') || lowerMessage.includes('check')) {
-                    addBotMessage(`Here's a summary of your accounts:<br><br>
-                        <strong>Checking:</strong> $${userData.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
-                        <strong>Savings:</strong> $${userData.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
-                        <strong>Auto Loan:</strong> $${userData.loan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
-                }
-                else if (lowerMessage.includes('credit') || lowerMessage.includes('score')) {
-                    addBotMessage(`Your current credit score is <strong>${userData.creditScore.current}</strong>, which decreased from ${userData.creditScore.previous} last month.<br><br>
-                        This change appears to be due to:<br>
-                        - Recent credit application<br>
-                        - Increased credit utilization<br><br>
-                        Based on your accounts, I recommend paying down your credit card balance to improve your score.`);
-                }
-                else if (lowerMessage.includes('save') || lowerMessage.includes('saving')) {
-                    addBotMessage(`Looking at your spending patterns, I've identified some opportunities to help you save consistently.<br><br>
-                        Based on your cash flow, you could comfortably save about $175/month without feeling stretched. Here are two methods that might work for you:<br><br>
-                        1. <strong>Automatic Micro-Saving:</strong> Round-Up Savings would save about $45-60/month.<br><br>
-                        2. <strong>Smart Scheduled Saving:</strong> Automatic weekly transfers of $40 after your paycheck deposits.`);
-                }
-                else if (lowerMessage.includes('loan') || lowerMessage.includes('car') || lowerMessage.includes('auto')) {
-                    addBotMessage(`Based on your current financial situation, here are some options for your auto loan:<br><br>
-                        1. <strong>Make extra payments</strong> - Your current loan has payments of $${userData.loan.payment} with the next one due ${userData.loan.nextDate}.<br><br>
-                        2. <strong>Refinance options</strong> - With your credit profile, you might qualify for a lower rate.<br><br>
-                        3. <strong>Payoff strategy</strong> - I can help you develop a plan to pay off your loan sooner.`);
-                }
-                else {
-                    addBotMessage(`I'm here to help with your financial questions and banking needs. How can I assist you today?`);
-                }
-            }, 1000); // 1 second delay
+            // Trim conversation history if it gets too long
+            if (conversationHistory.length > 20) {
+                // Keep the system message but trim older messages
+                const systemMessage = conversationHistory[0];
+                conversationHistory = [
+                    systemMessage,
+                    ...conversationHistory.slice(-10)
+                ];
+            }
         }
 
         // Function to show thinking indicator
@@ -318,7 +387,18 @@
             const indicator = document.createElement('div');
             indicator.className = 'bot-message';
             indicator.id = 'thinking-indicator';
-            indicator.textContent = 'Typing...';
+            
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'thinking';
+            
+            // Add three dots for the animation
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'thinking-dot';
+                thinkingDiv.appendChild(dot);
+            }
+            
+            indicator.appendChild(thinkingDiv);
             chatBox.appendChild(indicator);
             scrollToBottom();
         }
@@ -338,28 +418,30 @@
 
         // Function to get contextual suggestion chips based on the current message
         function getContextualChips(message) {
-            if (message.includes('balance') || message.includes('account')) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('balance') || lowerMessage.includes('account')) {
                 return [
                     { label: 'Checking details', message: 'Tell me about my checking account' },
                     { label: 'Savings details', message: 'Tell me about my savings account' },
                     { label: 'Loan details', message: 'Tell me about my auto loan' }
                 ];
             }
-            else if (message.includes('credit score')) {
+            else if (lowerMessage.includes('credit score')) {
                 return [
                     { label: 'Improve my score', message: 'How can I improve my credit score?' },
                     { label: 'Credit report', message: 'How do I get my credit report?' },
                     { label: 'Score factors', message: 'What factors affect my credit score?' }
                 ];
             }
-            else if (message.includes('saving')) {
+            else if (lowerMessage.includes('saving') || lowerMessage.includes('save')) {
                 return [
                     { label: 'Round-Up Savings', message: 'Tell me more about Round-Up Savings' },
                     { label: 'Weekly Transfers', message: 'Tell me about automatic transfers' },
                     { label: 'Savings Calculator', message: 'How much should I save each month?' }
                 ];
             }
-            else if (message.includes('loan')) {
+            else if (lowerMessage.includes('loan')) {
                 return [
                     { label: 'Extra payments', message: 'How do extra payments help?' },
                     { label: 'Refinance options', message: 'Tell me about refinancing' },
@@ -373,6 +455,99 @@
                     { label: 'Saving tips', message: 'How can I save more?' }
                 ];
             }
+        }
+
+        // Function to send message to backend that will relay to ChatGPT
+        async function sendToChatGPT(message) {
+            // Show thinking indicator
+            showThinkingIndicator();
+            
+            try {
+                // ⚠️ IMPORTANT: Replace with your actual backend URL
+                // This should be a server you control that securely stores the API key
+                const backendUrl = 'https://canvas-credit-union-backend.vercel.app/api/chat';
+                
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: conversationHistory,
+                        temperature: 0.7,
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API responded with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Remove thinking indicator
+                removeThinkingIndicator();
+                
+                // Add assistant's response to the chat
+                if (data && data.choices && data.choices.length > 0 && data.choices[0].message) {
+                    const assistantMessage = data.choices[0].message.content;
+                    addBotMessage(assistantMessage);
+                } else {
+                    throw new Error('Unexpected response format from API');
+                }
+                
+            } catch (error) {
+                console.error('Error sending message to AI:', error);
+                
+                // Remove thinking indicator
+                removeThinkingIndicator();
+                
+                // Add error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = "I'm having trouble connecting to our AI system. Let me use our backup system to help you.";
+                chatBox.appendChild(errorDiv);
+                
+                // Use fallback responses
+                useFallbackResponse(message);
+            }
+        }
+        
+        // Backup function to use if API fails
+        function useFallbackResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            let response = "";
+            
+            if (lowerMessage.includes('balance') || lowerMessage.includes('account') || lowerMessage.includes('check')) {
+                response = `Here's a summary of your accounts:<br><br>
+                    <strong>Checking:</strong> $${userData.accounts.checking.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                    <strong>Savings:</strong> $${userData.accounts.savings.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br>
+                    <strong>Auto Loan:</strong> $${userData.accounts.autoLoan.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+            else if (lowerMessage.includes('credit') || lowerMessage.includes('score')) {
+                response = `Your current credit score is <strong>${userData.customer.creditScore}</strong>, which decreased from ${userData.customer.previousCreditScore} last month.<br><br>
+                    This change appears to be due to:<br>
+                    - Recent credit application<br>
+                    - Increased credit utilization<br><br>
+                    Based on your accounts, I recommend paying down your credit card balance to improve your score.`;
+            }
+            else if (lowerMessage.includes('save') || lowerMessage.includes('saving')) {
+                response = `Looking at your spending patterns, I've identified some opportunities to help you save consistently.<br><br>
+                    Based on your cash flow, you could comfortably save about $175/month without feeling stretched. Here are two methods that might work for you:<br><br>
+                    1. <strong>Automatic Micro-Saving:</strong> Round-Up Savings would save about $45-60/month.<br><br>
+                    2. <strong>Smart Scheduled Saving:</strong> Automatic weekly transfers of $40 after your paycheck deposits.`;
+            }
+            else if (lowerMessage.includes('loan') || lowerMessage.includes('car') || lowerMessage.includes('auto')) {
+                response = `Based on your current financial situation, here are some options for your auto loan:<br><br>
+                    1. <strong>Make extra payments</strong> - Your current loan has payments of $${userData.accounts.autoLoan.paymentAmount} with the next one due ${userData.accounts.autoLoan.nextPaymentDate}.<br><br>
+                    2. <strong>Refinance options</strong> - With your credit profile, you might qualify for a lower rate.<br><br>
+                    3. <strong>Payoff strategy</strong> - I can help you develop a plan to pay off your loan sooner.`;
+            }
+            else {
+                response = `I'm here to help with your financial questions and banking needs. How can I assist you today?`;
+            }
+            
+            addBotMessage(response);
         }
     </script>
 </body>
