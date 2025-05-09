@@ -840,53 +840,8 @@
                     ...conversationHistory.slice(-10)
                 ];
                 
-                // First try to use OpenAI API directly if available
-                try {
-                    console.log('Attempting to use OpenAI API directly...');
-                    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer YOUR_OPENAI_API_KEY' // Replace with environment variable
-                        },
-                        body: JSON.stringify({
-                            model: 'gpt-4-0125-preview', // Using GPT-4 Turbo
-                            messages: messages,
-                            temperature: 0.7,
-                            max_tokens: 1000
-                        })
-                    });
-                    
-                    if (openAIResponse.ok) {
-                        const openAIData = await openAIResponse.json();
-                        // Remove typing indicator
-                        removeTypingIndicator();
-                        
-                        const assistantMessage = openAIData.choices[0].message.content;
-                        
-                        // Add the assistant's response to conversation history
-                        conversationHistory.push({
-                            role: "assistant",
-                            content: assistantMessage
-                        });
-                        
-                        // Trim history if it gets too long
-                        if (conversationHistory.length > 20) {
-                            conversationHistory = conversationHistory.slice(-20);
-                        }
-                        
-                        // Add the response to the chat
-                        addBotMessage(assistantMessage);
-                        return;
-                    } else {
-                        console.log('Direct OpenAI API call failed, falling back to backend');
-                    }
-                } catch (openAIError) {
-                    console.error('Error with direct OpenAI call:', openAIError);
-                    console.log('Falling back to backend');
-                }
-                
-                // Fallback to your backend
+                // Always use backend to protect API keys
+                // This ensures your OpenAI API key is never exposed in client-side code
                 console.log('Using backend API...');
                 const response = await fetch(backendUrl, {
                     method: 'POST',
